@@ -1,0 +1,27 @@
+[project]
+name = "sentiment"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.5",
+    "pandas>=3.0",
+    "scikit-learn>=1.9",
+    "onnxruntime>=1.30",
+    "skl2onnx>=1.20",
+    "camel-tools>=1.6",
+    "nltk>=3.10",
+    "emoji>=2.16",
+    "matplotlib>=3.11",
+    "seaborn>=0.13",
+    "requests>=2.34",
+    "joblib>=1.6",
+    "python-json-logger>=4.2.0"
+]
+
+[project.optional-dependencies]
+dev = ["pytest","pytest-cov","ruff","black","mypy","httpx","pre-commit"]
+[project.scripts]
+sentiment-train = "sentiment.train:main"
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
