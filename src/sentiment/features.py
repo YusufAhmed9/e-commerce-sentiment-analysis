@@ -1,7 +1,9 @@
 import re
 
 import emoji
+import joblib
 import nltk
+import pandas as pd
 import requests
 from camel_tools.utils.charsets import AR_LETTERS_CHARSET
 from camel_tools.utils.dediac import dediac_ar
@@ -72,7 +74,28 @@ class TextProcessingPipeline:
     def remove_stopwords(self, tokens: list) -> list:
         return [word for word in tokens if word not in self.stopwords]
     
+class FeatureBuilder:
+    def __init__(self, preprocessor, vectorizer):
+        self.preprocessor = preprocessor
+        self.vectorizer = vectorizer
+
+    def _clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        df["cleaned_text"] = df["text"].apply(self.preprocessor)
+        return df
+
+    def fit_transform(self, df: pd.DataFrame):
+        df = self._clean(df)
+        return self.vectorizer.fit_transform(df["cleaned_text"]), df["sentiment"].values
+
+    def transform(self, df: pd.DataFrame):
+        df = self._clean(df)
+        return self.vectorizer.transform(df["cleaned_text"]), df["sentiment"].values
+
+    def save(self, path: str):
+        joblib.dump(self.vectorizer, f"{path}.pkl")
 
 
-preprocessor = TextProcessingPipeline()
-vectorizer = TfidfVectorizer()
+def build_features(preprocessor=None, **tfidf_kwargs) -> FeatureBuilder:
+    preprocessor = preprocessor or TextProcessingPipeline()
+    return FeatureBuilder(preprocessor, TfidfVectorizer(**tfidf_kwargs))
