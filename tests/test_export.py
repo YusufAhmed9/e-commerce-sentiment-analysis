@@ -1,8 +1,8 @@
-from sentiment.export import OnnxExporter, PickleExporter, ExportType
-from sentiment.predict import LogisticPredictor
-
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
+
+from sentiment.export import ExportType, PickleExporter
+from sentiment.predict import LogisticPredictor
 
 X, y = make_classification(
     n_samples=60, n_features=20, n_informative=6,

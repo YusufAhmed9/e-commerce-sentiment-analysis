@@ -2,7 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT_DIR = next(p for p in Path(__file__).resolve().parents if (p / '.git').exists())
+ROOT_DIR = next(
+    (p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").exists()),
+    Path.cwd(),
+)
 DATA_DIR =  ROOT_DIR / "data"  
 MODEL_DIR = ROOT_DIR / "models"
 
@@ -10,22 +13,26 @@ LOGISTIC_01_CONFIGS = {
     "max_iter" : 1000
 }
 LOGISTIC_01_SAVE_PATH = MODEL_DIR / "logistic_01"
+TFIDF_01_PATH = MODEL_DIR / "tfidf_01"
 
 DATASETS = {
     "100k": {
-        "dir": "100k_arabic_reviews",
+        "file_name": "100k_arabic_reviews.csv",
         "columns_map": {"text": "text", "sentiment": "sentiment"},
         "label_map": {"negative": 0, "mixed": 1, "positive": 2},
+        "train_size": 0.8
     },
     "twitter": {
-        "dir": "arabic_twitter",
+        "file_name": "arabic_twitter.csv",
         "columns_map": {"text": "text", "sentiment": "sentiment"},
         "label_map": {"neg": 0, "pos": 2},
+        "train_size": 0.8
     },
     "ss30": {
-        "dir": "ss2030",
+        "file_name": "ss2030.csv",
         "columns_map": {"text": "text", "sentiment": "sentiment"},
         "label_map": {0: 0, 1: 2},
+        "train_size": 0.6
     },
 }
 
@@ -42,17 +49,16 @@ def map_label(label_map):
     return mapper
 
 
-def build_configs(split):
+def build_configs():
     return {
         name: {
-            "path": DATA_DIR / ds["dir"] / f"{split}.csv",
+            "file_name": DATA_DIR / ds["file_name"],
             "columns_map": ds["columns_map"],
             "label_transform": map_label(ds["label_map"]),
+            "train_size": ds["train_size"]
         }
         for name, ds in DATASETS.items()
     }
 
 
-train_configs = build_configs("train")
-val_configs = build_configs("val")
-test_configs = build_configs("test")
+data_configs = build_configs()

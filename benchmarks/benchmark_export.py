@@ -1,12 +1,15 @@
 import json
 import time
-from sentiment.export import ExportType
+
+import joblib
 import numpy as np
+
+from sentiment.config import LOGISTIC_01_SAVE_PATH, TFIDF_01_PATH, data_configs
 from sentiment.data import load_splits
-from sentiment.config import data_configs, TFIDF_01_PATH, LOGISTIC_01_SAVE_PATH
+from sentiment.export import ExportType
 from sentiment.features import FeatureBuilder, TextProcessingPipeline
 from sentiment.predict import LogisticPredictor
-import joblib
+
 
 def benchmark(predict_fn, inputs, warmup=20):
     for x in inputs[:warmup]:                 # warm-up: first calls are slower
