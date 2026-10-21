@@ -6,8 +6,8 @@ import joblib
 import numpy as np
 import onnxruntime as rt
 
-from .export import ExportStatus, ExportType
-from .logging_conf import init_logger
+from sentiment.export import ExportType
+from sentiment.logging_conf import init_logger
 
 logger = init_logger(name=__name__, level=logging.INFO)
 
@@ -15,6 +15,11 @@ class PredictionStatus(Enum):
     MODEL_NOT_LOADED = "model_is_not_loaded"
 
 class BasePredictor(ABC):
+
+    @property
+    @abstractmethod
+    def is_loaded(self) -> bool:
+        pass
 
     @abstractmethod
     def load(self, model_path: str):
@@ -35,23 +40,31 @@ class LogisticPredictor(BasePredictor):
         self._session = None
         self._input_name = None
 
+    @property
+    def is_loaded(self) -> bool:
+        return self._session is not None 
+
+    def _require_loaded(self):
+        if not self.is_loaded:
+            raise ValueError(PredictionStatus.MODEL_NOT_LOADED.value)
+
     def load(self, model_save_path: str):
         logger.info("loading a model", extra={"export_type": self._export_type.value, "save_path": model_save_path})
+        
         if self._export_type == ExportType.EXPORT_PICKLE:
-            self._session = joblib.load(model_save_path)
+            self._session = joblib.load(f"{model_save_path}.pkl")
 
         elif self._export_type == ExportType.EXPORT_ONNX:
             self._session = rt.InferenceSession(
-                model_save_path, 
+                f"{model_save_path}.onnx", 
                 providers=["CPUExecutionProvider"]
             )
             self._input_name = self._session.get_inputs()[0].name
 
-        else:
-            raise ValueError(ExportStatus.INVALID_EXPORT_TYPE.value)
-
     def predict_batch(self, X):
-        logger.info("predicting a batch", extra={"batch_size": X.shape[0]})
+        self._require_loaded()
+        
+        logger.debug("predicting a batch", extra={"batch_shape": X.shape, "export_type": self._export_type.value})
         if self._session is None:
             raise ValueError(PredictionStatus.MODEL_NOT_LOADED.value)
 
